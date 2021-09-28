@@ -1,17 +1,26 @@
-from fastapi import APIRouter, status, Response, Depends, HTTPException
+from fastapi import APIRouter, status, Response, Depends, Request
 from bson import ObjectId
-from passlib.hash import sha256_crypt
-from starlette.status import HTTP_204_NO_CONTENT
 from typing import List
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from starlette.datastructures import URL
+
 
 from .models import Estacion30300
 from config.db import conn
 from .schemas import Estacion30300Entity, Estacion30300Entities
 
+from .graficos import gen_heatmap
+
 estaciones = APIRouter()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+@estaciones.get('/estacion30300/heatmap', tags=["graficos"])
+async def get_heatmap(request: Request, token: str = Depends(oauth2_scheme)):
+
+    url = gen_heatmap(request.base_url)
+
+    return {"grafico": url}
 
 @estaciones.get('/estacion30300', response_model=List[Estacion30300], tags=["estacion30300"])
 async def find_all_registros(token: str = Depends(oauth2_scheme)):
